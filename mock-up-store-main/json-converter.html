@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON to Number=Amount Formatter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-card: rgba(18, 24, 38, 0.75);
+      --bg-input: #0f172a;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: #3b82f6;
+      --accent-blue: #3b82f6;
+      --accent-indigo: #6366f1;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #0b0f19 50%, #030712 100%);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 0.85rem;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      padding: 1.15rem 1.25rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-indigo), var(--accent-blue));
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.85rem;
+      font-size: 0.825rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-emerald:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .panel-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 1rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 380px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      color: #e2e8f0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .options-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.85rem;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .option-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .option-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    select, input[type="text"] {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 0.4rem;
+      color: var(--text-main);
+      padding: 0.45rem 0.75rem;
+      font-size: 0.85rem;
+      outline: none;
+      font-family: var(--font-sans);
+    }
+
+    select:focus, input[type="text"]:focus {
+      border-color: var(--border-focus);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #10b981;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      opacity: 0;
+      transform: translateY(1rem);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .preview-table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .table-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.4);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .table-header:hover {
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.75rem 1.25rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 0.6rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-family: var(--font-mono);
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .format-tag {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.3rem;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+      font-weight: 600;
+    }
+
+    .empty-state {
+      padding: 2.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .copy-pill {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      padding: 0.15rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      margin-left: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge">⚡ JSON Fast Formatter</div>
+      <h1>Extract Number & Amount</h1>
+      <p class="subtitle">Paste your transaction JSON or raw text. Automatically extracts all <code>"Number"</code> and <code>"Amount"</code> pairs into the formatted <code>Number=Amount#</code> string.</p>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Pairs Extracted</div>
+        <div class="stat-value" id="statCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Amount Sum</div>
+        <div class="stat-value" id="statTotalAmount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Unique Numbers</div>
+        <div class="stat-value" id="statUnique">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Average Amount</div>
+        <div class="stat-value" id="statAverage">0</div>
+      </div>
+    </div>
+
+    <!-- Options Bar -->
+    <div class="options-bar">
+      <div class="option-group">
+        <span class="option-label">Order:</span>
+        <select id="optOrder">
+          <option value="original">Original JSON Order (1, 2, 3...)</option>
+          <option value="reverse">Reverse Order (46=10#45=5#...)</option>
+          <option value="asc">Numeric Ascending (1 to 99)</option>
+          <option value="desc">Numeric Descending (99 to 1)</option>
+        </select>
+      </div>
+
+      <div class="option-group">
+        <span class="option-label">Pair Delimiter:</span>
+        <input type="text" id="optPairDelim" value="#" style="width: 50px; text-align: center;">
+      </div>
+
+      <div class="option-group">
+        <span class="option-label">Key/Value Delimiter:</span>
+        <input type="text" id="optKvDelim" value="=" style="width: 50px; text-align: center;">
+      </div>
+
+      <div class="option-group" style="margin-left: auto;">
+        <button class="btn btn-primary" id="btnConvert">Convert Now</button>
+      </div>
+    </div>
+
+    <!-- Main Grid: Input & Output Panels -->
+    <div class="main-grid">
+      <!-- Input Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📥 Paste JSON Text</span>
+          </div>
+          <div class="panel-actions">
+            <button class="btn" id="btnPasteClipboard" title="Paste from Clipboard">📋 Paste</button>
+            <button class="btn" id="btnLoadSample" title="Load sample Untitled-1.js">📄 Load Sample</button>
+            <button class="btn" id="btnClear" title="Clear text">🗑️ Clear</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <textarea id="inputJson" placeholder="Paste your JSON text here (e.g. from Untitled-1.js or any API response containing Detail: [{ Number, Amount }])..."></textarea>
+        </div>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📤 Formatted Output</span>
+            <span class="copy-pill" id="outputStatus">Ready</span>
+          </div>
+          <div class="panel-actions">
+            <button class="btn btn-emerald" id="btnCopyOutput">📋 Copy Result</button>
+            <button class="btn" id="btnDownload">💾 Download</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <textarea id="outputResult" readonly placeholder="Output format: 46=10#45=5#43=5#... will appear here automatically."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Collapsible Table Preview -->
+    <div class="preview-table-container">
+      <div class="table-header" id="tableToggle">
+        <div class="panel-title">
+          <span>🔍 Extracted Items Table (<span id="tableItemCount">0</span>)</span>
+        </div>
+        <span id="tableArrow" style="color: var(--text-muted); font-size: 0.9rem;">▼ Click to expand/collapse</span>
+      </div>
+      <div id="tableContent" style="max-height: 400px; overflow-y: auto;">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th style="width: 60px;">#</th>
+              <th>Number</th>
+              <th>Amount</th>
+              <th>Formatted Token</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td colspan="4" class="empty-state">Paste JSON above to see extracted rows.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">✅ Copied to clipboard!</div>
+
+  <script>
+    // Sample data from Untitled-1.js preloaded for easy testing
+    const sampleJson = `{
+  "TransactionId": 911999403292115,
+  "TotalAmount": 499,
+  "Detail": [
+    { "Number": "1", "Amount": 5 },
+    { "Number": "2", "Amount": 5 },
+    { "Number": "3", "Amount": 10 },
+    { "Number": "4", "Amount": 4 },
+    { "Number": "5", "Amount": 10 },
+    { "Number": "6", "Amount": 10 },
+    { "Number": "9", "Amount": 5 },
+    { "Number": "10", "Amount": 5 },
+    { "Number": "11", "Amount": 5 },
+    { "Number": "12", "Amount": 5 },
+    { "Number": "14", "Amount": 10 },
+    { "Number": "17", "Amount": 10 },
+    { "Number": "19", "Amount": 5 },
+    { "Number": "20", "Amount": 5 },
+    { "Number": "21", "Amount": 5 },
+    { "Number": "22", "Amount": 10 },
+    { "Number": "25", "Amount": 5 },
+    { "Number": "26", "Amount": 5 },
+    { "Number": "28", "Amount": 5 },
+    { "Number": "30", "Amount": 10 },
+    { "Number": "33", "Amount": 10 },
+    { "Number": "34", "Amount": 5 },
+    { "Number": "37", "Amount": 5 },
+    { "Number": "38", "Amount": 5 },
+    { "Number": "39", "Amount": 10 },
+    { "Number": "40", "Amount": 5 },
+    { "Number": "41", "Amount": 10 },
+    { "Number": "43", "Amount": 5 },
+    { "Number": "45", "Amount": 5 },
+    { "Number": "46", "Amount": 10 },
+    { "Number": "47", "Amount": 5 },
+    { "Number": "49", "Amount": 5 },
+    { "Number": "50", "Amount": 20 },
+    { "Number": "55", "Amount": 5 },
+    { "Number": "56", "Amount": 25 },
+    { "Number": "57", "Amount": 5 },
+    { "Number": "60", "Amount": 10 },
+    { "Number": "61", "Amount": 5 },
+    { "Number": "62", "Amount": 5 },
+    { "Number": "66", "Amount": 5 },
+    { "Number": "67", "Amount": 5 },
+    { "Number": "68", "Amount": 5 },
+    { "Number": "71", "Amount": 10 },
+    { "Number": "73", "Amount": 5 },
+    { "Number": "74", "Amount": 5 },
+    { "Number": "75", "Amount": 5 },
+    { "Number": "76", "Amount": 5 },
+    { "Number": "77", "Amount": 10 },
+    { "Number": "78", "Amount": 5 },
+    { "Number": "82", "Amount": 15 },
+    { "Number": "83", "Amount": 20 },
+    { "Number": "86", "Amount": 15 },
+    { "Number": "87", "Amount": 5 },
+    { "Number": "88", "Amount": 20 },
+    { "Number": "89", "Amount": 15 },
+    { "Number": "90", "Amount": 5 },
+    { "Number": "91", "Amount": 5 },
+    { "Number": "93", "Amount": 25 },
+    { "Number": "98", "Amount": 5 },
+    { "Number": "99", "Amount": 20 }
+  ]
+}`;
+
+    const inputJson = document.getElementById('inputJson');
+    const outputResult = document.getElementById('outputResult');
+    const optOrder = document.getElementById('optOrder');
+    const optPairDelim = document.getElementById('optPairDelim');
+    const optKvDelim = document.getElementById('optKvDelim');
+    const btnConvert = document.getElementById('btnConvert');
+    const btnPasteClipboard = document.getElementById('btnPasteClipboard');
+    const btnLoadSample = document.getElementById('btnLoadSample');
+    const btnClear = document.getElementById('btnClear');
+    const btnCopyOutput = document.getElementById('btnCopyOutput');
+    const btnDownload = document.getElementById('btnDownload');
+    const outputStatus = document.getElementById('outputStatus');
+    const toast = document.getElementById('toast');
+
+    const statCount = document.getElementById('statCount');
+    const statTotalAmount = document.getElementById('statTotalAmount');
+    const statUnique = document.getElementById('statUnique');
+    const statAverage = document.getElementById('statAverage');
+    const tableBody = document.getElementById('tableBody');
+    const tableItemCount = document.getElementById('tableItemCount');
+    const tableToggle = document.getElementById('tableToggle');
+    const tableContent = document.getElementById('tableContent');
+
+    function extractPairs(text) {
+      if (!text || !text.trim()) return [];
+      const list = [];
+
+      // 1. Try standard JSON parse
+      try {
+        const parsed = JSON.parse(text);
+        function deepSearch(obj) {
+          if (!obj) return;
+          if (Array.isArray(obj)) {
+            for (const item of obj) {
+              if (item && typeof item === 'object') {
+                const num = item.Number ?? item.number ?? item.Num ?? item.num;
+                const amt = item.Amount ?? item.amount ?? item.Amt ?? item.amt;
+                if (num !== undefined && amt !== undefined) {
+                  list.push({ number: String(num).trim(), amount: Number(amt) });
+                  continue;
+                }
+              }
+              deepSearch(item);
+            }
+          } else if (typeof obj === 'object') {
+            const num = obj.Number ?? obj.number ?? obj.Num ?? obj.num;
+            const amt = obj.Amount ?? obj.amount ?? obj.Amt ?? obj.amt;
+            if (num !== undefined && amt !== undefined && !Array.isArray(obj.Detail)) {
+              list.push({ number: String(num).trim(), amount: Number(amt) });
+            }
+            for (const key of Object.keys(obj)) {
+              deepSearch(obj[key]);
+            }
+          }
+        }
+        deepSearch(parsed);
+        if (list.length > 0) return list;
+      } catch (e) {
+        // Fallback to regex
+      }
+
+      // 2. Regex fallback for partial/malformed JSON
+      const blockRegex = /\{[^{}]*?"(?:Number|number)"\s*:\s*"?([^",\s}]+)"?[^{}]*?"(?:Amount|amount)"\s*:\s*"?([^",\s}]+)"?[^{}]*\}/g;
+      let match;
+      while ((match = blockRegex.exec(text)) !== null) {
+        list.push({ number: match[1].trim(), amount: Number(match[2].trim()) });
+      }
+
+      if (list.length === 0) {
+        const reverseBlockRegex = /\{[^{}]*?"(?:Amount|amount)"\s*:\s*"?([^",\s}]+)"?[^{}]*?"(?:Number|number)"\s*:\s*"?([^",\s}]+)"?[^{}]*\}/g;
+        while ((match = reverseBlockRegex.exec(text)) !== null) {
+          list.push({ number: match[2].trim(), amount: Number(match[1].trim()) });
+        }
+      }
+
+      return list;
+    }
+
+    function process() {
+      const text = inputJson.value;
+      const pairs = extractPairs(text);
+      const pairDelim = optPairDelim.value || '#';
+      const kvDelim = optKvDelim.value || '=';
+      const order = optOrder.value;
+
+      let sorted = [...pairs];
+      if (order === 'reverse') {
+        sorted.reverse();
+      } else if (order === 'asc') {
+        sorted.sort((a, b) => Number(a.number) - Number(b.number));
+      } else if (order === 'desc') {
+        sorted.sort((a, b) => Number(b.number) - Number(a.number));
+      }
+
+      const formatted = sorted.map(p => `${p.number}${kvDelim}${p.amount}`).join(pairDelim);
+      outputResult.value = formatted;
+
+      // Update stats
+      const count = sorted.length;
+      const totalAmount = sorted.reduce((sum, p) => sum + (isNaN(p.amount) ? 0 : p.amount), 0);
+      const uniqueNumbers = new Set(sorted.map(p => p.number)).size;
+      const avg = count > 0 ? (totalAmount / count).toFixed(1) : 0;
+
+      statCount.textContent = count;
+      statTotalAmount.textContent = totalAmount.toLocaleString();
+      statUnique.textContent = uniqueNumbers;
+      statAverage.textContent = avg;
+      outputStatus.textContent = count > 0 ? `${count} items` : 'Ready';
+      tableItemCount.textContent = count;
+
+      // Update table
+      if (sorted.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4" class="empty-state">No Number and Amount pairs found.</td></tr>';
+      } else {
+        tableBody.innerHTML = sorted.map((p, idx) => `
+          <tr>
+            <td style="color: var(--text-muted);">${idx + 1}</td>
+            <td><strong>${p.number}</strong></td>
+            <td><span style="color: #34d399;">₹ ${p.amount}</span></td>
+            <td><span class="format-tag">${p.number}${kvDelim}${p.amount}</span></td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // Event listeners
+    inputJson.addEventListener('input', process);
+    optOrder.addEventListener('change', process);
+    optPairDelim.addEventListener('input', process);
+    optKvDelim.addEventListener('input', process);
+    btnConvert.addEventListener('click', process);
+
+    btnLoadSample.addEventListener('click', () => {
+      inputJson.value = sampleJson;
+      process();
+      showToast('Loaded Untitled-1.js sample data!');
+    });
+
+    btnClear.addEventListener('click', () => {
+      inputJson.value = '';
+      process();
+    });
+
+    btnPasteClipboard.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        inputJson.value = text;
+        process();
+        showToast('Pasted from clipboard!');
+      } catch (err) {
+        alert('Could not access clipboard directly. Please press Ctrl+V inside the text area.');
+      }
+    });
+
+    btnCopyOutput.addEventListener('click', () => {
+      if (!outputResult.value) {
+        showToast('Nothing to copy!');
+        return;
+      }
+      navigator.clipboard.writeText(outputResult.value).then(() => {
+        showToast('✅ Copied to clipboard!');
+      }).catch(() => {
+        outputResult.select();
+        document.execCommand('copy');
+        showToast('✅ Copied to clipboard!');
+      });
+    });
+
+    btnDownload.addEventListener('click', () => {
+      if (!outputResult.value) {
+        showToast('Nothing to download!');
+        return;
+      }
+      const blob = new Blob([outputResult.value], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `number-amount-result-${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    tableToggle.addEventListener('click', () => {
+      if (tableContent.style.display === 'none') {
+        tableContent.style.display = 'block';
+        document.getElementById('tableArrow').textContent = '▼ Click to collapse';
+      } else {
+        tableContent.style.display = 'none';
+        document.getElementById('tableArrow').textContent = '▶ Click to expand';
+      }
+    });
+
+    // Auto-load sample on first load
+    inputJson.value = sampleJson;
+    process();
+  </script>
+</body>
+</html>
