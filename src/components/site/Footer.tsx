@@ -3,6 +3,10 @@ import { Instagram, MessageCircle } from "lucide-react";
 import { SITE, instagramUrl, whatsappUrl } from "@/lib/site";
 
 export function Footer() {
+  return null;
+}
+
+export function _UnusedFooter() {
   return (
     <footer className="mt-24 bg-ink text-ink-foreground">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 md:grid-cols-4 md:px-8">

@@ -9,16 +9,14 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { MessageCircle } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth";
 import { CartProvider } from "@/lib/cart";
-import { Footer } from "@/components/site/Footer";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { SITE, whatsappUrl } from "@/lib/site";
+import { SITE } from "@/lib/site";
 
 function NotFoundComponent() {
   return (
@@ -105,12 +103,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
-          <main className="min-h-[60vh]"><Outlet /></main>
-          <Footer />
-          <a href={whatsappUrl(`Hello ${SITE.name}, I have a question.`)} target="_blank" rel="noreferrer" aria-label="Chat on WhatsApp"
-            className="fixed bottom-5 right-5 z-50 rounded-full bg-whatsapp p-4 text-whatsapp-foreground shadow-soft transition hover:scale-105">
-            <MessageCircle className="size-6" />
-          </a>
+          <main className="min-h-screen"><Outlet /></main>
           <Toaster />
         </CartProvider>
       </AuthProvider>
