@@ -19,6 +19,10 @@ const NAV = [
 ] as const;
 
 export function Header() {
+  return null;
+}
+
+export function _UnusedHeader() {
   const [open, setOpen] = useState(false);
   const { user, isAdmin } = useAuth();
   const { count } = useCart();
