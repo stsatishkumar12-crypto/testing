@@ -71,6 +71,32 @@ export function extractNumberAmountPairs(input) {
 }
 
 /**
+ * Categorize a number string:
+ * - 1-100: Numbers between 1 and 100
+ * - 3-digit: Exactly 3 digits (111, 222, 333, 888...) and > 100
+ * - 4-digit: Exactly 4 digits (4444, 5555, 6666...)
+ * - above-100: All numbers > 100 or >= 3 digits
+ */
+export function categorizeItem(numStr) {
+  const clean = String(numStr).trim();
+  const digits = clean.replace(/\D/g, '').length;
+  const val = Number(clean);
+  const isNum = !isNaN(val);
+
+  const is1to100 = isNum && val >= 1 && val <= 100;
+  const isAbove100 = (isNum && val > 100) || digits >= 3;
+  const is3Digit = digits === 3 && (val > 100 || !isNum);
+  const is4Digit = digits === 4;
+
+  let label = '1 – 100';
+  if (is4Digit) label = '4-Digit';
+  else if (is3Digit) label = '3-Digit';
+  else if (isAbove100) label = 'Above 100';
+
+  return { is1to100, isAbove100, is3Digit, is4Digit, label };
+}
+
+/**
  * Formats pairs into `<Number>=<Amount>#<Number>=<Amount>#...`
  */
 export function formatPairs(pairs, options = {}) {
@@ -106,11 +132,49 @@ if (isMain) {
 
   const content = fs.readFileSync(targetPath, 'utf8');
   const pairs = extractNumberAmountPairs(content);
-  const totalAmount = pairs.reduce((sum, p) => sum + (isNaN(p.amount) ? 0 : p.amount), 0);
 
-  console.log(`\nExtracted ${pairs.length} items (Total Amount: ${totalAmount}) from: ${targetPath}`);
-  console.log(`Order: ${order}\n`);
-  console.log('--- FORMATTED RESULT ---');
-  console.log(formatPairs(pairs, { order }));
-  console.log('------------------------\n');
+  let sorted = [...pairs];
+  if (order === 'reverse') sorted.reverse();
+  else if (order === 'asc') sorted.sort((a, b) => Number(a.number) - Number(b.number));
+  else if (order === 'desc') sorted.sort((a, b) => Number(b.number) - Number(a.number));
+
+  const list1to100 = [];
+  const listAbove100 = [];
+  const list3Digit = [];
+  const list4Digit = [];
+
+  sorted.forEach(p => {
+    const cat = categorizeItem(p.number);
+    if (cat.is1to100) list1to100.push(p);
+    if (cat.isAbove100) listAbove100.push(p);
+    if (cat.is3Digit) list3Digit.push(p);
+    if (cat.is4Digit) list4Digit.push(p);
+  });
+
+  const sumAll = sorted.reduce((s, x) => s + (isNaN(x.amount) ? 0 : x.amount), 0);
+  const sum1to100 = list1to100.reduce((s, x) => s + (isNaN(x.amount) ? 0 : x.amount), 0);
+  const sum3Digit = list3Digit.reduce((s, x) => s + (isNaN(x.amount) ? 0 : x.amount), 0);
+  const sum4Digit = list4Digit.reduce((s, x) => s + (isNaN(x.amount) ? 0 : x.amount), 0);
+  const sumAbove100 = listAbove100.reduce((s, x) => s + (isNaN(x.amount) ? 0 : x.amount), 0);
+
+  console.log(`\n======================================================`);
+  console.log(`Extracted: ${pairs.length} items (Total: ₹ ${sumAll}) from: ${targetPath}`);
+  console.log(`Order: ${order}`);
+  console.log(`======================================================\n`);
+
+  console.log(`🔹 [1] ALL NUMBERS (${sorted.length} items, ₹ ${sumAll}):`);
+  console.log(formatPairs(sorted, { order }));
+
+  console.log(`\n🔹 [2] 1–100 NUMBERS (${list1to100.length} items, ₹ ${sum1to100}):`);
+  console.log(formatPairs(list1to100, { order }) || 'None');
+
+  console.log(`\n🔹 [3] 3-DIGIT NUMBERS (111, 222, 333, 888...) (${list3Digit.length} items, ₹ ${sum3Digit}):`);
+  console.log(formatPairs(list3Digit, { order }) || 'None');
+
+  console.log(`\n🔹 [4] 4-DIGIT NUMBERS (4444, 5555, 6666...) (${list4Digit.length} items, ₹ ${sum4Digit}):`);
+  console.log(formatPairs(list4Digit, { order }) || 'None');
+
+  console.log(`\n🔹 [5] TOTAL ABOVE 100 (${listAbove100.length} items, ₹ ${sumAbove100}):`);
+  console.log(formatPairs(listAbove100, { order }) || 'None');
+  console.log(`\n======================================================\n`);
 }
