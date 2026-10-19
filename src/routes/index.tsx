@@ -14,15 +14,15 @@ import {
   ListFilter,
   AlertCircle,
   Calculator,
-  Layers,
   Hash,
   Boxes,
-  Zap,
+  Layers,
+  Columns2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/")({
   component: JsonExtractorPage,
@@ -40,24 +40,22 @@ interface ParseResult {
   declaredTotalAmount?: number;
 }
 
-// Sample JSON containing 1-100, 3-digit (111, 222, 333, 888), and 4-digit (4444, 5555, 6666)
+// Sample JSON containing 1-100 numbers and 101-9999 numbers (like 999, 888, 4444)
 const SAMPLE_JSON = `[
-  { "Number": "44", "Amount": 50, "OrderNumber": 1 },
-  { "Number": "99", "Amount": 50, "OrderNumber": 2 },
-  { "Number": "32", "Amount": 50, "OrderNumber": 3 },
-  { "Number": "87", "Amount": 35, "OrderNumber": 4 },
-  { "Number": "67", "Amount": 40, "OrderNumber": 5 },
-  { "Number": "50", "Amount": 25, "OrderNumber": 6 },
-  { "Number": "5", "Amount": 50, "OrderNumber": 7 },
-  { "Number": "95", "Amount": 90, "OrderNumber": 8 },
-  { "Number": "59", "Amount": 60, "OrderNumber": 9 },
-  { "Number": "111", "Amount": 20, "OrderNumber": 10 },
-  { "Number": "222", "Amount": 25, "OrderNumber": 11 },
-  { "Number": "333", "Amount": 30, "OrderNumber": 12 },
-  { "Number": "888", "Amount": 30, "OrderNumber": 13 },
-  { "Number": "4444", "Amount": 10, "OrderNumber": 14 },
-  { "Number": "5555", "Amount": 15, "OrderNumber": 15 },
-  { "Number": "6666", "Amount": 20, "OrderNumber": 16 }
+  { "Number": "39", "Amount": 250, "OrderNumber": 1 },
+  { "Number": "79", "Amount": 250, "OrderNumber": 2 },
+  { "Number": "89", "Amount": 250, "OrderNumber": 3 },
+  { "Number": "99", "Amount": 250, "OrderNumber": 4 },
+  { "Number": "999", "Amount": 100, "OrderNumber": 5 },
+  { "Number": "11", "Amount": 100, "OrderNumber": 6 },
+  { "Number": "12", "Amount": 100, "OrderNumber": 7 },
+  { "Number": "13", "Amount": 100, "OrderNumber": 8 },
+  { "Number": "16", "Amount": 100, "OrderNumber": 9 },
+  { "Number": "17", "Amount": 100, "OrderNumber": 10 },
+  { "Number": "18", "Amount": 100, "OrderNumber": 11 },
+  { "Number": "21", "Amount": 100, "OrderNumber": 12 },
+  { "Number": "888", "Amount": 50, "OrderNumber": 13 },
+  { "Number": "4444", "Amount": 20, "OrderNumber": 14 }
 ]`;
 
 function extractNumberAmountPairs(input: string): ParseResult {
@@ -142,13 +140,14 @@ function extractNumberAmountPairs(input: string): ParseResult {
   return { items: list, declaredTotalAmount: declaredTotal };
 }
 
-// Category classification helper
-export function getItemCategoryInfo(numStr: string): {
+// Categorization logic: 1-100 (or 1-101) vs 101-9999
+export function categorizeNumber(
+  numStr: string,
+  cutoff: number = 100
+): {
   is1to100: boolean;
-  isAbove100: boolean;
-  is3Digit: boolean;
-  is4Digit: boolean;
-  categoryKey: "1-100" | "3-digit" | "4-digit" | "other-above-100";
+  is101to9999: boolean;
+  categoryKey: "1-100" | "101-9999";
   categoryLabel: string;
 } {
   const clean = String(numStr).trim();
@@ -156,38 +155,28 @@ export function getItemCategoryInfo(numStr: string): {
   const numVal = Number(clean);
   const isNumeric = !isNaN(numVal);
 
-  const is1to100 = isNumeric && numVal >= 1 && numVal <= 100;
-  const isAbove100 = (isNumeric && numVal > 100) || digits.length >= 3;
-  const is3Digit = digits.length === 3 && (numVal > 100 || !isNumeric);
-  const is4Digit = digits.length === 4;
+  // If number is <= cutoff (100 or 101) and within standard range
+  const is1to100 = isNumeric && numVal >= 1 && numVal <= cutoff;
+  // If number is > cutoff or has 3 or 4 digits (e.g. 999, 888, 4444) up to 9999
+  const is101to9999 = (isNumeric && numVal > cutoff && numVal <= 9999) || (!is1to100 && digits.length >= 3);
 
-  let categoryKey: "1-100" | "3-digit" | "4-digit" | "other-above-100" = "1-100";
-  let categoryLabel = "1 - 100";
-
-  if (is1to100) {
-    categoryKey = "1-100";
-    categoryLabel = "1 - 100";
-  } else if (is3Digit) {
-    categoryKey = "3-digit";
-    categoryLabel = "3-Digit";
-  } else if (is4Digit) {
-    categoryKey = "4-digit";
-    categoryLabel = "4-Digit";
-  } else if (isAbove100) {
-    categoryKey = "other-above-100";
-    categoryLabel = "Above 100";
-  }
-
-  return { is1to100, isAbove100, is3Digit, is4Digit, categoryKey, categoryLabel };
+  return {
+    is1to100,
+    is101to9999,
+    categoryKey: is1to100 ? "1-100" : "101-9999",
+    categoryLabel: is1to100 ? (cutoff === 101 ? "1 – 101" : "1 – 100") : "101 – 9999",
+  };
 }
 
 export function JsonExtractorPage() {
   const [rawInput, setRawInput] = useState(SAMPLE_JSON);
   const [order, setOrder] = useState<"original" | "reverse" | "asc" | "desc">("original");
+  const [cutoff, setCutoff] = useState<number>(100); // 100 by default (1-100 & 101-9999) or 101
   const [pairDelim, setPairDelim] = useState("#");
   const [kvDelim, setKvDelim] = useState("=");
-  const [activeTab, setActiveTab] = useState("all");
-  const [tableFilter, setTableFilter] = useState<"all" | "1-100" | "above-100" | "3-digit" | "4-digit">("all");
+  // Default active tab is 'split' (shows BOTH 1-100 and 101-9999 side-by-side cleanly separated!)
+  const [activeTab, setActiveTab] = useState<"split" | "1-100" | "101-9999" | "all" | "json">("split");
+  const [tableFilter, setTableFilter] = useState<"all" | "1-100" | "101-9999">("all");
   const [copiedType, setCopiedType] = useState<string | null>(null);
 
   const parsedData = useMemo(() => extractNumberAmountPairs(rawInput), [rawInput]);
@@ -205,19 +194,18 @@ export function JsonExtractorPage() {
     return sorted;
   }, [parsedData.items, order]);
 
-  // Category splits
+  // Two primary categories: 1-100 & 101-9999
   const categories = useMemo(() => {
     const list1to100: ExtractedItem[] = [];
-    const listAbove100: ExtractedItem[] = [];
-    const list3Digit: ExtractedItem[] = [];
-    const list4Digit: ExtractedItem[] = [];
+    const list101to9999: ExtractedItem[] = [];
 
     for (const item of extractedList) {
-      const info = getItemCategoryInfo(item.number);
-      if (info.is1to100) list1to100.push(item);
-      if (info.isAbove100) listAbove100.push(item);
-      if (info.is3Digit) list3Digit.push(item);
-      if (info.is4Digit) list4Digit.push(item);
+      const cat = categorizeNumber(item.number, cutoff);
+      if (cat.is1to100) {
+        list1to100.push(item);
+      } else {
+        list101to9999.push(item);
+      }
     }
 
     const calcSum = (arr: ExtractedItem[]) => arr.reduce((s, x) => s + (isNaN(x.amount) ? 0 : x.amount), 0);
@@ -237,33 +225,19 @@ export function JsonExtractorPage() {
         formatted: toFormat(list1to100),
       },
       aboveHundred: {
-        items: listAbove100,
-        count: listAbove100.length,
-        sum: calcSum(listAbove100),
-        formatted: toFormat(listAbove100),
-      },
-      threeDigit: {
-        items: list3Digit,
-        count: list3Digit.length,
-        sum: calcSum(list3Digit),
-        formatted: toFormat(list3Digit),
-      },
-      fourDigit: {
-        items: list4Digit,
-        count: list4Digit.length,
-        sum: calcSum(list4Digit),
-        formatted: toFormat(list4Digit),
+        items: list101to9999,
+        count: list101to9999.length,
+        sum: calcSum(list101to9999),
+        formatted: toFormat(list101to9999),
       },
     };
-  }, [extractedList, pairDelim, kvDelim]);
+  }, [extractedList, pairDelim, kvDelim, cutoff]);
 
   // Clean JSON array of only { "Number": "...", "Amount": ... }
   const cleanJsonString = useMemo(() => {
     let targetList = extractedList;
     if (activeTab === "1-100") targetList = categories.oneToHundred.items;
-    else if (activeTab === "above-100") targetList = categories.aboveHundred.items;
-    else if (activeTab === "3-digit") targetList = categories.threeDigit.items;
-    else if (activeTab === "4-digit") targetList = categories.fourDigit.items;
+    else if (activeTab === "101-9999") targetList = categories.aboveHundred.items;
 
     const cleanArray = targetList.map((item) => ({
       Number: item.number,
@@ -272,7 +246,7 @@ export function JsonExtractorPage() {
     return JSON.stringify(cleanArray, null, 2);
   }, [extractedList, activeTab, categories]);
 
-  // Stats
+  // Overall Stats
   const totalCount = extractedList.length;
   const calculatedSum = categories.all.sum;
   const uniqueNumbers = new Set(extractedList.map((x) => x.number)).size;
@@ -289,9 +263,7 @@ export function JsonExtractorPage() {
   // Filtered list for table
   const filteredTableList = useMemo(() => {
     if (tableFilter === "1-100") return categories.oneToHundred.items;
-    if (tableFilter === "above-100") return categories.aboveHundred.items;
-    if (tableFilter === "3-digit") return categories.threeDigit.items;
-    if (tableFilter === "4-digit") return categories.fourDigit.items;
+    if (tableFilter === "101-9999") return categories.aboveHundred.items;
     return extractedList;
   }, [extractedList, tableFilter, categories]);
 
@@ -331,22 +303,8 @@ export function JsonExtractorPage() {
     toast.success(`Downloaded ${filename}`);
   };
 
-  // Get active tab's formatted string
-  const currentFormattedString = useMemo(() => {
-    switch (activeTab) {
-      case "1-100":
-        return categories.oneToHundred.formatted;
-      case "above-100":
-        return categories.aboveHundred.formatted;
-      case "3-digit":
-        return categories.threeDigit.formatted;
-      case "4-digit":
-        return categories.fourDigit.formatted;
-      case "all":
-      default:
-        return categories.all.formatted;
-    }
-  }, [activeTab, categories]);
+  const label1to100 = cutoff === 101 ? "1 – 101" : "1 – 100";
+  const label101to9999 = cutoff === 101 ? "102 – 9999" : "101 – 9999";
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8">
@@ -357,24 +315,131 @@ export function JsonExtractorPage() {
             <Sparkles className="size-3.5 mr-1.5 inline" /> Fast Number & Amount Extractor
           </Badge>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-sans">
-            Extract & Categorize <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-amber-300 bg-clip-text text-transparent">Numbers & Amount</span>
+            <span className="text-blue-400">{label1to100}</span> &{" "}
+            <span className="bg-gradient-to-r from-purple-400 to-amber-300 bg-clip-text text-transparent">
+              {label101to9999}
+            </span>{" "}
+            Separate Extractor
           </h1>
           <p className="text-slate-400 max-w-2xl mx-auto text-sm sm:text-base">
-            Paste JSON data. Automatically divides into categories: <span className="text-blue-300 font-semibold">1–100</span>, <span className="text-amber-300 font-semibold">3-Digit (111, 222, 333, 888)</span>, <span className="text-purple-300 font-semibold">4-Digit (4444, 5555, 6666)</span>, aur <span className="text-emerald-300 font-semibold">Above 100</span> with 1-click copy!
+            Paste JSON data. Automatically divides into two clean, separate categories:{" "}
+            <span className="text-blue-300 font-bold">{label1to100} Numbers</span> aur{" "}
+            <span className="text-amber-300 font-bold">{label101to9999} Numbers</span> (jaise 999, 888, 4444).
           </p>
         </div>
 
-        {/* Global Summary Stats */}
+        {/* Two Spotlight Category Cards: 1-100 & 101-9999 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Spotlight Card 1: 1 - 100 */}
+          <div
+            onClick={() => setActiveTab("1-100")}
+            className={`cursor-pointer rounded-2xl border p-5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between ${
+              activeTab === "1-100" || activeTab === "split"
+                ? "bg-blue-950/40 border-blue-500/60 shadow-xl shadow-blue-500/10 ring-1 ring-blue-500/50"
+                : "bg-slate-900/70 border-slate-800/80 hover:border-blue-500/30 hover:bg-slate-900"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-blue-400">
+                  <Hash className="size-4" /> Category: {label1to100} Numbers
+                </span>
+                <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/40 text-xs px-2.5 py-0.5 font-mono">
+                  {categories.oneToHundred.count} items
+                </Badge>
+              </div>
+              <div className="text-3xl font-mono font-extrabold text-white mb-1">
+                ₹ {categories.oneToHundred.sum.toLocaleString()}
+              </div>
+              <p className="text-xs text-slate-400 mb-4">Standard 1 to 100 single & double digit numbers</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(categories.oneToHundred.formatted, label1to100);
+                }}
+                className="flex-1 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/20"
+              >
+                {copiedType === label1to100 ? <Check className="size-3.5 mr-1.5" /> : <Copy className="size-3.5 mr-1.5" />}
+                Copy {label1to100} ({categories.oneToHundred.count})
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveTab("1-100");
+                }}
+                className="text-xs border-blue-500/30 text-blue-300 hover:bg-blue-950/50"
+              >
+                View
+              </Button>
+            </div>
+          </div>
+
+          {/* Spotlight Card 2: 101 - 9999 */}
+          <div
+            onClick={() => setActiveTab("101-9999")}
+            className={`cursor-pointer rounded-2xl border p-5 transition-all duration-200 relative overflow-hidden flex flex-col justify-between ${
+              activeTab === "101-9999" || activeTab === "split"
+                ? "bg-purple-950/40 border-purple-500/60 shadow-xl shadow-purple-500/10 ring-1 ring-purple-500/50"
+                : "bg-slate-900/70 border-slate-800/80 hover:border-purple-500/30 hover:bg-slate-900"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-purple-400">
+                  <Boxes className="size-4" /> Category: {label101to9999} Numbers
+                </span>
+                <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/40 text-xs px-2.5 py-0.5 font-mono">
+                  {categories.aboveHundred.count} items
+                </Badge>
+              </div>
+              <div className="text-3xl font-mono font-extrabold text-white mb-1">
+                ₹ {categories.aboveHundred.sum.toLocaleString()}
+              </div>
+              <p className="text-xs text-slate-400 mb-4">3-digit & 4-digit numbers (jaise 999, 888, 111, 4444...)</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(categories.aboveHundred.formatted, label101to9999);
+                }}
+                className="flex-1 text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow-md shadow-purple-600/20"
+              >
+                {copiedType === label101to9999 ? <Check className="size-3.5 mr-1.5" /> : <Copy className="size-3.5 mr-1.5" />}
+                Copy {label101to9999} ({categories.aboveHundred.count})
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveTab("101-9999");
+                }}
+                className="text-xs border-purple-500/30 text-purple-300 hover:bg-purple-950/50"
+              >
+                View
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Global Summary Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-slate-900/80 border-slate-800 backdrop-blur">
             <CardHeader className="pb-2">
-              <CardDescription className="text-slate-400 text-xs uppercase tracking-wider">Total Items Count</CardDescription>
+              <CardDescription className="text-slate-400 text-xs uppercase tracking-wider">Total Items</CardDescription>
               <CardTitle className="text-2xl sm:text-3xl font-mono text-white">{totalCount} items</CardTitle>
             </CardHeader>
           </Card>
           <Card className="bg-slate-900/80 border-slate-800 backdrop-blur">
             <CardHeader className="pb-2">
-              <CardDescription className="text-slate-400 text-xs uppercase tracking-wider">Items Sum (Calculated)</CardDescription>
+              <CardDescription className="text-slate-400 text-xs uppercase tracking-wider">Total Amount Sum</CardDescription>
               <CardTitle className="text-2xl sm:text-3xl font-mono text-emerald-400">₹ {calculatedSum.toLocaleString()}</CardTitle>
             </CardHeader>
           </Card>
@@ -390,145 +455,6 @@ export function JsonExtractorPage() {
               <CardTitle className="text-2xl sm:text-3xl font-mono text-amber-400">₹ {averageAmount}</CardTitle>
             </CardHeader>
           </Card>
-        </div>
-
-        {/* Categories Breakdown Quick Cards (NEW FEATURE!) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Category 1: 1 - 100 */}
-          <div
-            onClick={() => setActiveTab("1-100")}
-            className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 relative overflow-hidden ${
-              activeTab === "1-100"
-                ? "bg-blue-950/40 border-blue-500/60 shadow-lg shadow-blue-500/10 ring-1 ring-blue-500/40"
-                : "bg-slate-900/70 border-slate-800/80 hover:border-blue-500/30 hover:bg-slate-900"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-400">
-                <Hash className="size-3.5" /> 1 – 100 Numbers
-              </span>
-              <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[11px] font-mono">
-                {categories.oneToHundred.count} items
-              </Badge>
-            </div>
-            <div className="text-xl font-mono font-bold text-white mb-2">
-              ₹ {categories.oneToHundred.sum.toLocaleString()}
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                copyToClipboard(categories.oneToHundred.formatted, "1–100 Numbers");
-              }}
-              className="w-full text-xs h-7 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border-blue-500/30"
-            >
-              {copiedType === "1–100 Numbers" ? <Check className="size-3 mr-1" /> : <Copy className="size-3 mr-1" />}
-              Copy 1–100 ({categories.oneToHundred.count})
-            </Button>
-          </div>
-
-          {/* Category 2: 3-Digit Numbers */}
-          <div
-            onClick={() => setActiveTab("3-digit")}
-            className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 relative overflow-hidden ${
-              activeTab === "3-digit"
-                ? "bg-amber-950/40 border-amber-500/60 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/40"
-                : "bg-slate-900/70 border-slate-800/80 hover:border-amber-500/30 hover:bg-slate-900"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-400">
-                <Boxes className="size-3.5" /> 3-Digit (111, 222, 333, 888)
-              </span>
-              <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[11px] font-mono">
-                {categories.threeDigit.count} items
-              </Badge>
-            </div>
-            <div className="text-xl font-mono font-bold text-white mb-2">
-              ₹ {categories.threeDigit.sum.toLocaleString()}
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                copyToClipboard(categories.threeDigit.formatted, "3-Digit Numbers");
-              }}
-              className="w-full text-xs h-7 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border-amber-500/30"
-            >
-              {copiedType === "3-Digit Numbers" ? <Check className="size-3 mr-1" /> : <Copy className="size-3 mr-1" />}
-              Copy 3-Digit ({categories.threeDigit.count})
-            </Button>
-          </div>
-
-          {/* Category 3: 4-Digit Numbers */}
-          <div
-            onClick={() => setActiveTab("4-digit")}
-            className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 relative overflow-hidden ${
-              activeTab === "4-digit"
-                ? "bg-purple-950/40 border-purple-500/60 shadow-lg shadow-purple-500/10 ring-1 ring-purple-500/40"
-                : "bg-slate-900/70 border-slate-800/80 hover:border-purple-500/30 hover:bg-slate-900"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-purple-400">
-                <Zap className="size-3.5" /> 4-Digit (4444, 5555, 6666)
-              </span>
-              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[11px] font-mono">
-                {categories.fourDigit.count} items
-              </Badge>
-            </div>
-            <div className="text-xl font-mono font-bold text-white mb-2">
-              ₹ {categories.fourDigit.sum.toLocaleString()}
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                copyToClipboard(categories.fourDigit.formatted, "4-Digit Numbers");
-              }}
-              className="w-full text-xs h-7 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border-purple-500/30"
-            >
-              {copiedType === "4-Digit Numbers" ? <Check className="size-3 mr-1" /> : <Copy className="size-3 mr-1" />}
-              Copy 4-Digit ({categories.fourDigit.count})
-            </Button>
-          </div>
-
-          {/* Category 4: Above 100 (Total 100+) */}
-          <div
-            onClick={() => setActiveTab("above-100")}
-            className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 relative overflow-hidden ${
-              activeTab === "above-100"
-                ? "bg-emerald-950/40 border-emerald-500/60 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/40"
-                : "bg-slate-900/70 border-slate-800/80 hover:border-emerald-500/30 hover:bg-slate-900"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-400">
-                <Layers className="size-3.5" /> Total Above 100
-              </span>
-              <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[11px] font-mono">
-                {categories.aboveHundred.count} items
-              </Badge>
-            </div>
-            <div className="text-xl font-mono font-bold text-white mb-2">
-              ₹ {categories.aboveHundred.sum.toLocaleString()}
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                copyToClipboard(categories.aboveHundred.formatted, "Above 100 Numbers");
-              }}
-              className="w-full text-xs h-7 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border-emerald-500/30"
-            >
-              {copiedType === "Above 100 Numbers" ? <Check className="size-3 mr-1" /> : <Copy className="size-3 mr-1" />}
-              Copy Above 100 ({categories.aboveHundred.count})
-            </Button>
-          </div>
         </div>
 
         {/* Calculation Audit / Breakdown Banner */}
@@ -551,6 +477,7 @@ export function JsonExtractorPage() {
         {/* Control Toolbar */}
         <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
+            {/* Order Selector */}
             <div className="flex items-center gap-2">
               <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1">
                 <ArrowDownUp className="size-3.5" /> Order:
@@ -560,13 +487,29 @@ export function JsonExtractorPage() {
                 onChange={(e) => setOrder(e.target.value as any)}
                 className="bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-md px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
               >
-                <option value="original">Original Order (44=50#99=50#...)</option>
-                <option value="reverse">Reverse Order (59=60#95=90#...)</option>
+                <option value="original">Original Order (As Pasted)</option>
+                <option value="reverse">Reverse Order</option>
                 <option value="asc">Ascending by Number</option>
                 <option value="desc">Descending by Number</option>
               </select>
             </div>
 
+            {/* Range Cutoff Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1">
+                <Layers className="size-3.5" /> Range Cutoff:
+              </span>
+              <select
+                value={cutoff}
+                onChange={(e) => setCutoff(Number(e.target.value))}
+                className="bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-md px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+              >
+                <option value={100}>1–100 & 101–9999 (Standard)</option>
+                <option value={101}>1–101 & 102–9999</option>
+              </select>
+            </div>
+
+            {/* Delimiters */}
             <div className="flex items-center gap-2">
               <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold">Pair Sep:</span>
               <input
@@ -588,42 +531,34 @@ export function JsonExtractorPage() {
             </div>
           </div>
 
+          {/* Quick Copy Toolbar Buttons */}
           <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
               variant="outline"
-              onClick={() => copyToClipboard(categories.all.formatted, "All Numbers")}
+              onClick={() => copyToClipboard(categories.oneToHundred.formatted, label1to100)}
               className="bg-blue-600 hover:bg-blue-700 text-white border-transparent text-xs"
+            >
+              {copiedType === label1to100 ? <Check className="size-3.5 mr-1" /> : <Copy className="size-3.5 mr-1" />}
+              Copy {label1to100} ({categories.oneToHundred.count})
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => copyToClipboard(categories.aboveHundred.formatted, label101to9999)}
+              className="bg-purple-600 hover:bg-purple-700 text-white border-transparent text-xs"
+            >
+              {copiedType === label101to9999 ? <Check className="size-3.5 mr-1" /> : <Copy className="size-3.5 mr-1" />}
+              Copy {label101to9999} ({categories.aboveHundred.count})
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => copyToClipboard(categories.all.formatted, "All Numbers")}
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 text-xs"
             >
               {copiedType === "All Numbers" ? <Check className="size-3.5 mr-1" /> : <Copy className="size-3.5 mr-1" />}
               Copy All ({totalCount})
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => copyToClipboard(categories.oneToHundred.formatted, "1-100 Numbers")}
-              className="bg-sky-600 hover:bg-sky-700 text-white border-transparent text-xs"
-            >
-              {copiedType === "1-100 Numbers" ? <Check className="size-3.5 mr-1" /> : <Copy className="size-3.5 mr-1" />}
-              Copy 1–100 ({categories.oneToHundred.count})
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => copyToClipboard(categories.threeDigit.formatted, "3-Digit Numbers")}
-              className="bg-amber-600 hover:bg-amber-700 text-white border-transparent text-xs"
-            >
-              {copiedType === "3-Digit Numbers" ? <Check className="size-3.5 mr-1" /> : <Copy className="size-3.5 mr-1" />}
-              Copy 3-Digit ({categories.threeDigit.count})
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => copyToClipboard(categories.fourDigit.formatted, "4-Digit Numbers")}
-              className="bg-purple-600 hover:bg-purple-700 text-white border-transparent text-xs"
-            >
-              {copiedType === "4-Digit Numbers" ? <Check className="size-3.5 mr-1" /> : <Copy className="size-3.5 mr-1" />}
-              Copy 4-Digit ({categories.fourDigit.count})
             </Button>
             <Button
               size="sm"
@@ -664,35 +599,29 @@ export function JsonExtractorPage() {
                 onChange={(e) => setRawInput(e.target.value)}
                 placeholder="Paste your JSON text here..."
                 rows={16}
-                className="w-full h-[400px] bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-slate-200 leading-relaxed resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full h-[420px] bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-slate-200 leading-relaxed resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </CardContent>
           </Card>
 
-          {/* Output Panel with Category Tabs */}
+          {/* Output Panel with Clean Tabs: Separate View / 1-100 / 101-9999 / All / Clean JSON */}
           <Card className="bg-slate-900/80 border-slate-800 flex flex-col">
             <CardHeader className="py-3 px-4 border-b border-slate-800 flex flex-col gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-1 overflow-x-auto pb-1 max-w-full">
-                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+                  <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-auto">
                     <TabsList className="bg-slate-950 border border-slate-800 h-8 flex flex-wrap">
-                      <TabsTrigger value="all" className="text-xs h-6 px-2.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                      <TabsTrigger value="split" className="text-xs h-6 px-3 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
+                        <Columns2 className="size-3 mr-1 inline" /> Separate View (Both)
+                      </TabsTrigger>
+                      <TabsTrigger value="1-100" className="text-xs h-6 px-3 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                        {label1to100} ({categories.oneToHundred.count})
+                      </TabsTrigger>
+                      <TabsTrigger value="101-9999" className="text-xs h-6 px-3 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+                        {label101to9999} ({categories.aboveHundred.count})
+                      </TabsTrigger>
+                      <TabsTrigger value="all" className="text-xs h-6 px-2.5 data-[state=active]:bg-slate-700 data-[state=active]:text-white">
                         All ({categories.all.count})
-                      </TabsTrigger>
-                      <TabsTrigger value="1-100" className="text-xs h-6 px-2.5 data-[state=active]:bg-sky-600 data-[state=active]:text-white">
-                        1–100 ({categories.oneToHundred.count})
-                      </TabsTrigger>
-                      <TabsTrigger value="3-digit" className="text-xs h-6 px-2.5 data-[state=active]:bg-amber-600 data-[state=active]:text-white">
-                        3-Digit ({categories.threeDigit.count})
-                      </TabsTrigger>
-                      <TabsTrigger value="4-digit" className="text-xs h-6 px-2.5 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-                        4-Digit ({categories.fourDigit.count})
-                      </TabsTrigger>
-                      <TabsTrigger value="above-100" className="text-xs h-6 px-2.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white">
-                        100+ ({categories.aboveHundred.count})
-                      </TabsTrigger>
-                      <TabsTrigger value="split" className="text-xs h-6 px-2.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
-                        Split View
                       </TabsTrigger>
                       <TabsTrigger value="json" className="text-xs h-6 px-2.5 data-[state=active]:bg-pink-600 data-[state=active]:text-white">
                         Clean JSON
@@ -706,8 +635,17 @@ export function JsonExtractorPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() => {
-                      const text = activeTab === "json" ? cleanJsonString : currentFormattedString;
-                      copyToClipboard(text, activeTab.toUpperCase());
+                      if (activeTab === "split") {
+                        copyToClipboard(`${categories.oneToHundred.formatted}\n\n${categories.aboveHundred.formatted}`, "Both Categories");
+                      } else if (activeTab === "1-100") {
+                        copyToClipboard(categories.oneToHundred.formatted, label1to100);
+                      } else if (activeTab === "101-9999") {
+                        copyToClipboard(categories.aboveHundred.formatted, label101to9999);
+                      } else if (activeTab === "json") {
+                        copyToClipboard(cleanJsonString, "Clean JSON");
+                      } else {
+                        copyToClipboard(categories.all.formatted, "All Numbers");
+                      }
                     }}
                     className="text-xs h-8 text-slate-300 hover:text-white"
                   >
@@ -716,7 +654,17 @@ export function JsonExtractorPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => downloadFile(activeTab === "json" ? cleanJsonString : currentFormattedString, `${activeTab}-numbers.txt`, activeTab === "json" ? "application/json" : "text/plain")}
+                    onClick={() => {
+                      const text =
+                        activeTab === "1-100"
+                          ? categories.oneToHundred.formatted
+                          : activeTab === "101-9999"
+                          ? categories.aboveHundred.formatted
+                          : activeTab === "json"
+                          ? cleanJsonString
+                          : categories.all.formatted;
+                      downloadFile(text, `${activeTab}-numbers.txt`, activeTab === "json" ? "application/json" : "text/plain");
+                    }}
                     className="text-xs h-8 text-slate-300 hover:text-white"
                   >
                     <Download className="size-3.5 mr-1" /> Download
@@ -724,87 +672,106 @@ export function JsonExtractorPage() {
                 </div>
               </div>
             </CardHeader>
+
             <CardContent className="p-4 flex-1">
-              {activeTab === "split" ? (
-                /* Split View: All Categories Shown Simultaneously */
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                  {/* Category 1-100 Card */}
-                  <div className="bg-slate-950 border border-blue-500/30 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-blue-400">1 – 100 Numbers ({categories.oneToHundred.count} items | ₹ {categories.oneToHundred.sum})</span>
-                      <Button size="sm" variant="ghost" onClick={() => copyToClipboard(categories.oneToHundred.formatted, "1-100")} className="h-6 text-[11px] text-blue-300 hover:text-white">
-                        <Copy className="size-3 mr-1" /> Copy
+              {/* SEPARATE VIEW: Shows 1-100 & 101-9999 in two clean separate boxes! */}
+              {activeTab === "split" && (
+                <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+                  {/* Category 1: 1 - 100 */}
+                  <div className="bg-slate-950 border border-blue-500/40 rounded-xl p-3.5">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
+                          {label1to100} Numbers ({categories.oneToHundred.count} items | ₹ {categories.oneToHundred.sum})
+                        </span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(categories.oneToHundred.formatted, label1to100)}
+                        className="h-6 text-[11px] px-2.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border-blue-500/30"
+                      >
+                        <Copy className="size-3 mr-1" /> Copy {label1to100}
                       </Button>
                     </div>
                     <textarea
                       readOnly
-                      rows={3}
-                      value={categories.oneToHundred.formatted || "No 1-100 numbers found."}
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-2 text-xs font-mono text-blue-300 resize-none focus:outline-none"
+                      rows={4}
+                      value={categories.oneToHundred.formatted || `No ${label1to100} numbers found.`}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-blue-300 resize-none focus:outline-none"
                     />
                   </div>
 
-                  {/* Category 3-Digit Card */}
-                  <div className="bg-slate-950 border border-amber-500/30 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-amber-400">3-Digit Numbers (111, 222, 333, 888...) ({categories.threeDigit.count} items | ₹ {categories.threeDigit.sum})</span>
-                      <Button size="sm" variant="ghost" onClick={() => copyToClipboard(categories.threeDigit.formatted, "3-Digit")} className="h-6 text-[11px] text-amber-300 hover:text-white">
-                        <Copy className="size-3 mr-1" /> Copy
+                  {/* Category 2: 101 - 9999 */}
+                  <div className="bg-slate-950 border border-purple-500/40 rounded-xl p-3.5">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-purple-400">
+                          {label101to9999} Numbers (jaise 999, 888...) ({categories.aboveHundred.count} items | ₹ {categories.aboveHundred.sum})
+                        </span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(categories.aboveHundred.formatted, label101to9999)}
+                        className="h-6 text-[11px] px-2.5 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border-purple-500/30"
+                      >
+                        <Copy className="size-3 mr-1" /> Copy {label101to9999}
                       </Button>
                     </div>
                     <textarea
                       readOnly
-                      rows={3}
-                      value={categories.threeDigit.formatted || "No 3-digit numbers found."}
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-2 text-xs font-mono text-amber-300 resize-none focus:outline-none"
-                    />
-                  </div>
-
-                  {/* Category 4-Digit Card */}
-                  <div className="bg-slate-950 border border-purple-500/30 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-purple-400">4-Digit Numbers (4444, 5555, 6666...) ({categories.fourDigit.count} items | ₹ {categories.fourDigit.sum})</span>
-                      <Button size="sm" variant="ghost" onClick={() => copyToClipboard(categories.fourDigit.formatted, "4-Digit")} className="h-6 text-[11px] text-purple-300 hover:text-white">
-                        <Copy className="size-3 mr-1" /> Copy
-                      </Button>
-                    </div>
-                    <textarea
-                      readOnly
-                      rows={3}
-                      value={categories.fourDigit.formatted || "No 4-digit numbers found."}
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-2 text-xs font-mono text-purple-300 resize-none focus:outline-none"
-                    />
-                  </div>
-
-                  {/* Category Above 100 Total Card */}
-                  <div className="bg-slate-950 border border-emerald-500/30 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-emerald-400">Total Above 100 ({categories.aboveHundred.count} items | ₹ {categories.aboveHundred.sum})</span>
-                      <Button size="sm" variant="ghost" onClick={() => copyToClipboard(categories.aboveHundred.formatted, "Above 100")} className="h-6 text-[11px] text-emerald-300 hover:text-white">
-                        <Copy className="size-3 mr-1" /> Copy
-                      </Button>
-                    </div>
-                    <textarea
-                      readOnly
-                      rows={3}
-                      value={categories.aboveHundred.formatted || "No 100+ numbers found."}
-                      className="w-full bg-slate-900 border border-slate-800 rounded p-2 text-xs font-mono text-emerald-300 resize-none focus:outline-none"
+                      rows={4}
+                      value={categories.aboveHundred.formatted || `No ${label101to9999} numbers found.`}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-purple-300 resize-none focus:outline-none"
                     />
                   </div>
                 </div>
-              ) : (
+              )}
+
+              {/* Single Category Focus Views */}
+              {activeTab === "1-100" && (
                 <textarea
                   readOnly
-                  value={activeTab === "json" ? cleanJsonString : currentFormattedString}
+                  value={categories.oneToHundred.formatted || `No ${label1to100} numbers found.`}
                   rows={16}
-                  className="w-full h-[400px] bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-emerald-300 leading-relaxed resize-none focus:outline-none"
+                  className="w-full h-[420px] bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-blue-300 leading-relaxed resize-none focus:outline-none"
+                />
+              )}
+
+              {activeTab === "101-9999" && (
+                <textarea
+                  readOnly
+                  value={categories.aboveHundred.formatted || `No ${label101to9999} numbers found.`}
+                  rows={16}
+                  className="w-full h-[420px] bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-purple-300 leading-relaxed resize-none focus:outline-none"
+                />
+              )}
+
+              {activeTab === "all" && (
+                <textarea
+                  readOnly
+                  value={categories.all.formatted || "No numbers found."}
+                  rows={16}
+                  className="w-full h-[420px] bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-emerald-300 leading-relaxed resize-none focus:outline-none"
+                />
+              )}
+
+              {activeTab === "json" && (
+                <textarea
+                  readOnly
+                  value={cleanJsonString}
+                  rows={16}
+                  className="w-full h-[420px] bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-pink-300 leading-relaxed resize-none focus:outline-none"
                 />
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Extracted Items Table with Category Filter & Badges */}
+        {/* Extracted Items Table with Clean Category Filter (1-100 & 101-9999) */}
         <Card className="bg-slate-900/80 border-slate-800 overflow-hidden">
           <CardHeader className="py-4 px-6 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -818,43 +785,27 @@ export function JsonExtractorPage() {
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
               <Button
                 size="sm"
+                variant={tableFilter === "1-100" ? "default" : "outline"}
+                onClick={() => setTableFilter("1-100")}
+                className={`h-7 text-xs ${tableFilter === "1-100" ? "bg-blue-600 text-white" : "border-slate-800 text-slate-400"}`}
+              >
+                {label1to100} ({categories.oneToHundred.count})
+              </Button>
+              <Button
+                size="sm"
+                variant={tableFilter === "101-9999" ? "default" : "outline"}
+                onClick={() => setTableFilter("101-9999")}
+                className={`h-7 text-xs ${tableFilter === "101-9999" ? "bg-purple-600 text-white" : "border-slate-800 text-slate-400"}`}
+              >
+                {label101to9999} ({categories.aboveHundred.count})
+              </Button>
+              <Button
+                size="sm"
                 variant={tableFilter === "all" ? "default" : "outline"}
                 onClick={() => setTableFilter("all")}
                 className={`h-7 text-xs ${tableFilter === "all" ? "bg-indigo-600 text-white" : "border-slate-800 text-slate-400"}`}
               >
                 All ({totalCount})
-              </Button>
-              <Button
-                size="sm"
-                variant={tableFilter === "1-100" ? "default" : "outline"}
-                onClick={() => setTableFilter("1-100")}
-                className={`h-7 text-xs ${tableFilter === "1-100" ? "bg-blue-600 text-white" : "border-slate-800 text-slate-400"}`}
-              >
-                1–100 ({categories.oneToHundred.count})
-              </Button>
-              <Button
-                size="sm"
-                variant={tableFilter === "3-digit" ? "default" : "outline"}
-                onClick={() => setTableFilter("3-digit")}
-                className={`h-7 text-xs ${tableFilter === "3-digit" ? "bg-amber-600 text-white" : "border-slate-800 text-slate-400"}`}
-              >
-                3-Digit ({categories.threeDigit.count})
-              </Button>
-              <Button
-                size="sm"
-                variant={tableFilter === "4-digit" ? "default" : "outline"}
-                onClick={() => setTableFilter("4-digit")}
-                className={`h-7 text-xs ${tableFilter === "4-digit" ? "bg-purple-600 text-white" : "border-slate-800 text-slate-400"}`}
-              >
-                4-Digit ({categories.fourDigit.count})
-              </Button>
-              <Button
-                size="sm"
-                variant={tableFilter === "above-100" ? "default" : "outline"}
-                onClick={() => setTableFilter("above-100")}
-                className={`h-7 text-xs ${tableFilter === "above-100" ? "bg-emerald-600 text-white" : "border-slate-800 text-slate-400"}`}
-              >
-                Above 100 ({categories.aboveHundred.count})
               </Button>
             </div>
           </CardHeader>
@@ -879,21 +830,21 @@ export function JsonExtractorPage() {
                   </tr>
                 ) : (
                   filteredTableList.map((item, idx) => {
-                    const info = getItemCategoryInfo(item.number);
+                    const cat = categorizeNumber(item.number, cutoff);
                     return (
                       <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
                         <td className="py-2.5 px-4 text-slate-500">{idx + 1}</td>
                         <td className="py-2.5 px-4 text-slate-400">{item.orderNumber ?? idx + 1}</td>
                         <td className="py-2.5 px-4 font-bold text-white text-sm">{item.number}</td>
                         <td className="py-2.5 px-4">
-                          {info.is4Digit ? (
-                            <Badge className="bg-purple-500/15 border-purple-500/40 text-purple-300 text-[10px]">4-Digit</Badge>
-                          ) : info.is3Digit ? (
-                            <Badge className="bg-amber-500/15 border-amber-500/40 text-amber-300 text-[10px]">3-Digit</Badge>
-                          ) : info.is1to100 ? (
-                            <Badge className="bg-blue-500/15 border-blue-500/40 text-blue-300 text-[10px]">1 – 100</Badge>
+                          {cat.is1to100 ? (
+                            <Badge className="bg-blue-500/15 border-blue-500/40 text-blue-300 text-[10px]">
+                              {label1to100}
+                            </Badge>
                           ) : (
-                            <Badge className="bg-emerald-500/15 border-emerald-500/40 text-emerald-300 text-[10px]">Above 100</Badge>
+                            <Badge className="bg-purple-500/15 border-purple-500/40 text-purple-300 text-[10px]">
+                              {label101to9999}
+                            </Badge>
                           )}
                         </td>
                         <td className="py-2.5 px-4 text-emerald-400 font-bold">₹ {item.amount}</td>

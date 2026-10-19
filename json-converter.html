@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JSON to Number=Amount Formatter & Categories</title>
+  <title>JSON to 1-100 & 101-9999 Separate Extractor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -86,6 +86,100 @@
       line-height: 1.5;
     }
 
+    /* 2 Main Spotlight Category Cards */
+    .spotlight-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .spotlight-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .spotlight-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .spotlight-card:hover {
+      background: rgba(30, 41, 59, 0.9);
+      transform: translateY(-2px);
+    }
+
+    .spotlight-card.card-blue {
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .spotlight-card.card-purple {
+      border-color: rgba(168, 85, 247, 0.4);
+    }
+
+    .spotlight-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .spotlight-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .spotlight-badge {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-weight: 600;
+    }
+
+    .spotlight-sum {
+      font-size: 1.75rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: #ffffff;
+    }
+
+    .spotlight-btn {
+      width: 100%;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-blue {
+      background: #2563eb;
+      color: white;
+    }
+    .btn-blue:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-purple {
+      background: #9333ea;
+      color: white;
+    }
+    .btn-purple:hover {
+      background: #7e22ce;
+    }
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -98,101 +192,25 @@
       backdrop-filter: blur(12px);
       border: 1px solid var(--border-color);
       border-radius: 1rem;
-      padding: 1.15rem 1.25rem;
+      padding: 1rem 1.25rem;
       position: relative;
       overflow: hidden;
       box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
     }
 
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--accent-indigo), var(--accent-blue));
-    }
-
     .stat-label {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--text-muted);
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.25rem;
     }
 
     .stat-value {
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--text-main);
       font-family: var(--font-mono);
-    }
-
-    /* Category Cards Grid */
-    .cat-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .cat-card {
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid var(--border-color);
-      border-radius: 0.85rem;
-      padding: 1rem 1.15rem;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .cat-card:hover {
-      background: rgba(30, 41, 59, 0.8);
-      transform: translateY(-2px);
-    }
-
-    .cat-card.active-cat {
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 0 1px var(--accent-blue);
-    }
-
-    .cat-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .cat-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .cat-badge {
-      font-size: 0.75rem;
-      font-family: var(--font-mono);
-      padding: 0.15rem 0.5rem;
-      border-radius: 9999px;
-      font-weight: 600;
-    }
-
-    .cat-sum {
-      font-size: 1.4rem;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      color: #ffffff;
-    }
-
-    .cat-btn {
-      margin-top: 0.25rem;
-      width: 100%;
-      font-size: 0.75rem;
-      padding: 0.35rem 0.5rem;
-      border-radius: 0.4rem;
     }
 
     .main-grid {
@@ -264,20 +282,6 @@
       border-color: rgba(255, 255, 255, 0.2);
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #3b82f6, #6366f1);
-      border-color: transparent;
-      color: white;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-
-    .btn-emerald {
-      background: linear-gradient(135deg, #10b981, #059669);
-      border-color: transparent;
-      color: white;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-
     .panel-body {
       padding: 1.25rem;
       display: flex;
@@ -288,7 +292,7 @@
 
     textarea {
       width: 100%;
-      height: 400px;
+      height: 420px;
       background: var(--bg-input);
       border: 1px solid var(--border-color);
       border-radius: 0.75rem;
@@ -457,9 +461,7 @@
     }
 
     .tag-blue { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd; }
-    .tag-amber { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fcd34d; }
     .tag-purple { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: #d8b4fe; }
-    .tag-emerald { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; }
 
     .empty-state {
       padding: 2.5rem;
@@ -468,28 +470,35 @@
       font-size: 0.9rem;
     }
 
-    .copy-pill {
-      background: rgba(59, 130, 246, 0.15);
-      color: #60a5fa;
-      padding: 0.15rem 0.5rem;
-      border-radius: 0.25rem;
-      font-size: 0.75rem;
-      margin-left: 0.5rem;
-    }
-
-    .split-container {
+    /* Dual Separate Boxes Container */
+    .dual-box-container {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
-      max-height: 400px;
+      gap: 1rem;
+      max-height: 420px;
       overflow-y: auto;
     }
 
-    .split-card {
-      background: rgba(15, 23, 42, 0.8);
+    .separate-box {
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 0.75rem;
+      padding: 0.85rem;
       border: 1px solid var(--border-color);
-      border-radius: 0.6rem;
-      padding: 0.75rem;
+    }
+
+    .box-blue {
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .box-purple {
+      border-color: rgba(168, 85, 247, 0.4);
+    }
+
+    .box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
     }
   </style>
 </head>
@@ -497,10 +506,39 @@
 
   <div class="container">
     <header>
-      <div class="badge">⚡ Fast Categorized Formatter</div>
+      <div class="badge">⚡ Separate Categories Formatter</div>
       <h1>Extract Number & Amount</h1>
-      <p class="subtitle">Extracts <code>"Number"</code> and <code>"Amount"</code> pairs and categorizes into <strong>1–100</strong>, <strong>3-Digit (111, 222, 333, 888)</strong>, <strong>4-Digit (4444, 5555, 6666)</strong>, aur <strong>Above 100</strong> with 1-click copy!</p>
+      <p class="subtitle">Extracts <code>"Number"</code> and <code>"Amount"</code> pairs and separates them into two distinct categories: <strong style="color: #60a5fa;">1–100 Numbers</strong> aur <strong style="color: #c084fc;">101–9999 Numbers</strong> (jaise 999, 888, 4444) with 1-click copy!</p>
     </header>
+
+    <!-- 2 Spotlight Category Cards: 1-100 & 101-9999 -->
+    <div class="spotlight-grid">
+      <!-- 1 - 100 Card -->
+      <div class="spotlight-card card-blue" id="spotlight1to100">
+        <div>
+          <div class="spotlight-header">
+            <span class="spotlight-title" style="color: #60a5fa;" id="title1to100"># 1 – 100 Numbers</span>
+            <span class="spotlight-badge tag-blue" id="badge1to100">0 items</span>
+          </div>
+          <div class="spotlight-sum" id="sum1to100">₹ 0</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Standard 1 to 100 numbers</div>
+        </div>
+        <button class="spotlight-btn btn-blue" id="btnCopy1to100">📋 Copy 1–100 (<span id="btnCount1to100">0</span>)</button>
+      </div>
+
+      <!-- 101 - 9999 Card -->
+      <div class="spotlight-card card-purple" id="spotlight101to9999">
+        <div>
+          <div class="spotlight-header">
+            <span class="spotlight-title" style="color: #c084fc;" id="title101to9999">📦 101 – 9999 Numbers</span>
+            <span class="spotlight-badge tag-purple" id="badge101to9999">0 items</span>
+          </div>
+          <div class="spotlight-sum" id="sum101to9999">₹ 0</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">3-digit & 4-digit numbers (999, 888, 4444...)</div>
+        </div>
+        <button class="spotlight-btn btn-purple" id="btnCopy101to9999">📋 Copy 101–9999 (<span id="btnCount101to9999">0</span>)</button>
+      </div>
+    </div>
 
     <!-- Global Stats Bar -->
     <div class="stats-grid">
@@ -522,58 +560,23 @@
       </div>
     </div>
 
-    <!-- Category Breakdown Cards -->
-    <div class="cat-grid">
-      <!-- 1 - 100 Card -->
-      <div class="cat-card" id="cardCat1to100" style="border-color: rgba(59, 130, 246, 0.3);">
-        <div class="cat-header">
-          <span class="cat-title" style="color: #60a5fa;"># 1 – 100 Numbers</span>
-          <span class="cat-badge tag-blue" id="badge1to100">0 items</span>
-        </div>
-        <div class="cat-sum" id="sum1to100">₹ 0</div>
-        <button class="btn cat-btn tag-blue" id="btnCopy1to100">📋 Copy 1–100</button>
-      </div>
-
-      <!-- 3-Digit Card -->
-      <div class="cat-card" id="cardCat3Digit" style="border-color: rgba(245, 158, 11, 0.3);">
-        <div class="cat-header">
-          <span class="cat-title" style="color: #fbbf24;">📦 3-Digit (111, 222, 333...)</span>
-          <span class="cat-badge tag-amber" id="badge3Digit">0 items</span>
-        </div>
-        <div class="cat-sum" id="sum3Digit">₹ 0</div>
-        <button class="btn cat-btn tag-amber" id="btnCopy3Digit">📋 Copy 3-Digit</button>
-      </div>
-
-      <!-- 4-Digit Card -->
-      <div class="cat-card" id="cardCat4Digit" style="border-color: rgba(168, 85, 247, 0.3);">
-        <div class="cat-header">
-          <span class="cat-title" style="color: #c084fc;">⚡ 4-Digit (4444, 5555...)</span>
-          <span class="cat-badge tag-purple" id="badge4Digit">0 items</span>
-        </div>
-        <div class="cat-sum" id="sum4Digit">₹ 0</div>
-        <button class="btn cat-btn tag-purple" id="btnCopy4Digit">📋 Copy 4-Digit</button>
-      </div>
-
-      <!-- Above 100 Card -->
-      <div class="cat-card" id="cardCatAbove100" style="border-color: rgba(16, 185, 129, 0.3);">
-        <div class="cat-header">
-          <span class="cat-title" style="color: #34d399;">🚀 Total Above 100</span>
-          <span class="cat-badge tag-emerald" id="badgeAbove100">0 items</span>
-        </div>
-        <div class="cat-sum" id="sumAbove100">₹ 0</div>
-        <button class="btn cat-btn tag-emerald" id="btnCopyAbove100">📋 Copy Above 100</button>
-      </div>
-    </div>
-
     <!-- Options Bar -->
     <div class="options-bar">
       <div class="option-group">
         <span class="option-label">Order:</span>
         <select id="optOrder">
-          <option value="original">Original Order (44=50#99=50#...)</option>
-          <option value="reverse">Reverse Order (59=60#95=90#...)</option>
-          <option value="asc">Numeric Ascending (1 to 99)</option>
-          <option value="desc">Numeric Descending (99 to 1)</option>
+          <option value="original">Original Order (As Pasted)</option>
+          <option value="reverse">Reverse Order</option>
+          <option value="asc">Numeric Ascending</option>
+          <option value="desc">Numeric Descending</option>
+        </select>
+      </div>
+
+      <div class="option-group">
+        <span class="option-label">Category Cutoff:</span>
+        <select id="optCutoff">
+          <option value="100">1–100 & 101–9999 (Standard)</option>
+          <option value="101">1–101 & 102–9999</option>
         </select>
       </div>
 
@@ -588,7 +591,8 @@
       </div>
 
       <div class="option-group" style="margin-left: auto;">
-        <button class="btn btn-primary" id="btnConvert">Convert Now</button>
+        <button class="btn btn-blue" id="btnTopCopy1to100">Copy 1–100</button>
+        <button class="btn btn-purple" id="btnTopCopy101to9999">Copy 101–9999</button>
       </div>
     </div>
 
@@ -602,70 +606,61 @@
           </div>
           <div class="panel-actions">
             <button class="btn" id="btnPasteClipboard" title="Paste from Clipboard">📋 Paste</button>
-            <button class="btn" id="btnLoadSample" title="Load sample with 3-digit and 4-digit numbers">📄 Load Sample</button>
+            <button class="btn" id="btnLoadSample" title="Load sample with 999 and standard numbers">📄 Load Sample</button>
             <button class="btn" id="btnClear" title="Clear text">🗑️ Clear</button>
           </div>
         </div>
         <div class="panel-body">
-          <textarea id="inputJson" placeholder="Paste your JSON text here (e.g. from Untitled-1.js or any API response containing Detail: [{ Number, Amount }])..."></textarea>
+          <textarea id="inputJson" placeholder="Paste your JSON text here..."></textarea>
         </div>
       </div>
 
-      <!-- Output Panel with Category Tabs -->
+      <!-- Output Panel with Clean Tabs -->
       <div class="panel">
         <div class="panel-header">
           <div class="tab-bar" id="outputTabs">
-            <button class="tab-btn active" data-tab="all">All (<span id="tabCountAll">0</span>)</button>
-            <button class="tab-btn" data-tab="1-100">1–100 (<span id="tabCount1to100">0</span>)</button>
-            <button class="tab-btn" data-tab="3-digit">3-Digit (<span id="tabCount3Digit">0</span>)</button>
-            <button class="tab-btn" data-tab="4-digit">4-Digit (<span id="tabCount4Digit">0</span>)</button>
-            <button class="tab-btn" data-tab="above-100">Above 100 (<span id="tabCountAbove100">0</span>)</button>
-            <button class="tab-btn" data-tab="split">Split View</button>
+            <button class="tab-btn active" data-tab="split">Separate View (Both)</button>
+            <button class="tab-btn" data-tab="1-100" id="tabLabel1to100">1–100 (<span id="tabCount1to100">0</span>)</button>
+            <button class="tab-btn" data-tab="101-9999" id="tabLabel101to9999">101–9999 (<span id="tabCount101to9999">0</span>)</button>
+            <button class="tab-btn" data-tab="all">All (<span id="tabCountAll">0</span>)</button>
           </div>
           <div class="panel-actions">
-            <button class="btn btn-emerald" id="btnCopyOutput">📋 Copy Result</button>
+            <button class="btn" id="btnCopyOutput">📋 Copy Active</button>
             <button class="btn" id="btnDownload">💾 Download</button>
           </div>
         </div>
+
         <div class="panel-body">
-          <div id="singleOutputContainer">
-            <textarea id="outputResult" readonly placeholder="Output will appear here automatically."></textarea>
+          <!-- SEPARATE VIEW (Both boxes shown side-by-side / stacked cleanly!) -->
+          <div id="splitOutputContainer" class="dual-box-container">
+            <!-- Box 1: 1-100 -->
+            <div class="separate-box box-blue">
+              <div class="box-header">
+                <strong style="color: #60a5fa; font-size: 0.85rem;" id="boxTitle1to100">1 – 100 Numbers (<span id="splitCount1to100">0</span> items | <span id="splitSum1to100">₹ 0</span>)</strong>
+                <button class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: #2563eb; color: white; border: none;" onclick="copyCategory('1-100')">📋 Copy 1–100</button>
+              </div>
+              <textarea id="splitText1to100" readonly style="height: 140px; font-size: 0.8rem; padding: 0.6rem; color: #93c5fd;"></textarea>
+            </div>
+
+            <!-- Box 2: 101-9999 -->
+            <div class="separate-box box-purple">
+              <div class="box-header">
+                <strong style="color: #c084fc; font-size: 0.85rem;" id="boxTitle101to9999">101 – 9999 Numbers (<span id="splitCount101to9999">0</span> items | <span id="splitSum101to9999">₹ 0</span>)</strong>
+                <button class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: #9333ea; color: white; border: none;" onclick="copyCategory('101-9999')">📋 Copy 101–9999</button>
+              </div>
+              <textarea id="splitText101to9999" readonly style="height: 140px; font-size: 0.8rem; padding: 0.6rem; color: #d8b4fe;"></textarea>
+            </div>
           </div>
-          <div id="splitOutputContainer" class="split-container" style="display: none;">
-            <div class="split-card">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-                <strong style="color: #60a5fa; font-size: 0.8rem;">1 – 100 Numbers (<span id="splitCount1to100">0</span>)</strong>
-                <button class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="copyCategory('1-100')">Copy</button>
-              </div>
-              <textarea id="splitText1to100" readonly style="height: 70px; font-size: 0.75rem; padding: 0.5rem;"></textarea>
-            </div>
-            <div class="split-card">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-                <strong style="color: #fbbf24; font-size: 0.8rem;">3-Digit Numbers (<span id="splitCount3Digit">0</span>)</strong>
-                <button class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="copyCategory('3-digit')">Copy</button>
-              </div>
-              <textarea id="splitText3Digit" readonly style="height: 70px; font-size: 0.75rem; padding: 0.5rem;"></textarea>
-            </div>
-            <div class="split-card">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-                <strong style="color: #c084fc; font-size: 0.8rem;">4-Digit Numbers (<span id="splitCount4Digit">0</span>)</strong>
-                <button class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="copyCategory('4-digit')">Copy</button>
-              </div>
-              <textarea id="splitText4Digit" readonly style="height: 70px; font-size: 0.75rem; padding: 0.5rem;"></textarea>
-            </div>
-            <div class="split-card">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
-                <strong style="color: #34d399; font-size: 0.8rem;">Above 100 Total (<span id="splitCountAbove100">0</span>)</strong>
-                <button class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="copyCategory('above-100')">Copy</button>
-              </div>
-              <textarea id="splitTextAbove100" readonly style="height: 70px; font-size: 0.75rem; padding: 0.5rem;"></textarea>
-            </div>
+
+          <!-- Single Category Focus View -->
+          <div id="singleOutputContainer" style="display: none;">
+            <textarea id="outputResult" readonly placeholder="Output will appear here."></textarea>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Collapsible Table Preview with Category Column -->
+    <!-- Collapsible Table Preview with 1-100 & 101-9999 Category Column -->
     <div class="preview-table-container">
       <div class="table-header" id="tableToggle">
         <div class="panel-title">
@@ -674,9 +669,7 @@
         <div style="display: flex; gap: 0.35rem; align-items: center;">
           <button class="tab-btn active" id="btnFilterAll" onclick="event.stopPropagation(); setTableFilter('all')">All</button>
           <button class="tab-btn" id="btnFilter1to100" onclick="event.stopPropagation(); setTableFilter('1-100')">1–100</button>
-          <button class="tab-btn" id="btnFilter3Digit" onclick="event.stopPropagation(); setTableFilter('3-digit')">3-Digit</button>
-          <button class="tab-btn" id="btnFilter4Digit" onclick="event.stopPropagation(); setTableFilter('4-digit')">4-Digit</button>
-          <button class="tab-btn" id="btnFilterAbove100" onclick="event.stopPropagation(); setTableFilter('above-100')">Above 100</button>
+          <button class="tab-btn" id="btnFilter101to9999" onclick="event.stopPropagation(); setTableFilter('101-9999')">101–9999</button>
           <span id="tableArrow" style="color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem;">▼ Click to collapse</span>
         </div>
       </div>
@@ -704,36 +697,32 @@
   <div class="toast" id="toast">✅ Copied to clipboard!</div>
 
   <script>
-    // Sample data including 1-100, 3-digit and 4-digit numbers
+    // Sample data matching user's Image 1 (39, 79, 89, 99, 999, 11, 12, 13...)
     const sampleJson = `[
-  { "Number": "44", "Amount": 50, "OrderNumber": 1 },
-  { "Number": "99", "Amount": 50, "OrderNumber": 2 },
-  { "Number": "32", "Amount": 50, "OrderNumber": 3 },
-  { "Number": "87", "Amount": 35, "OrderNumber": 4 },
-  { "Number": "67", "Amount": 40, "OrderNumber": 5 },
-  { "Number": "50", "Amount": 25, "OrderNumber": 6 },
-  { "Number": "5", "Amount": 50, "OrderNumber": 7 },
-  { "Number": "95", "Amount": 90, "OrderNumber": 8 },
-  { "Number": "59", "Amount": 60, "OrderNumber": 9 },
-  { "Number": "111", "Amount": 20, "OrderNumber": 10 },
-  { "Number": "222", "Amount": 25, "OrderNumber": 11 },
-  { "Number": "333", "Amount": 30, "OrderNumber": 12 },
-  { "Number": "888", "Amount": 30, "OrderNumber": 13 },
-  { "Number": "4444", "Amount": 10, "OrderNumber": 14 },
-  { "Number": "5555", "Amount": 15, "OrderNumber": 15 },
-  { "Number": "6666", "Amount": 20, "OrderNumber": 16 }
+  { "Number": "39", "Amount": 250, "OrderNumber": 1 },
+  { "Number": "79", "Amount": 250, "OrderNumber": 2 },
+  { "Number": "89", "Amount": 250, "OrderNumber": 3 },
+  { "Number": "99", "Amount": 250, "OrderNumber": 4 },
+  { "Number": "999", "Amount": 100, "OrderNumber": 5 },
+  { "Number": "11", "Amount": 100, "OrderNumber": 6 },
+  { "Number": "12", "Amount": 100, "OrderNumber": 7 },
+  { "Number": "13", "Amount": 100, "OrderNumber": 8 },
+  { "Number": "16", "Amount": 100, "OrderNumber": 9 },
+  { "Number": "17", "Amount": 100, "OrderNumber": 10 },
+  { "Number": "18", "Amount": 100, "OrderNumber": 11 },
+  { "Number": "21", "Amount": 100, "OrderNumber": 12 }
 ]`;
 
-    let activeTab = 'all';
+    let activeTab = 'split';
     let currentTableFilter = 'all';
     let cachedCategories = {};
 
     const inputJson = document.getElementById('inputJson');
     const outputResult = document.getElementById('outputResult');
     const optOrder = document.getElementById('optOrder');
+    const optCutoff = document.getElementById('optCutoff');
     const optPairDelim = document.getElementById('optPairDelim');
     const optKvDelim = document.getElementById('optKvDelim');
-    const btnConvert = document.getElementById('btnConvert');
     const btnPasteClipboard = document.getElementById('btnPasteClipboard');
     const btnLoadSample = document.getElementById('btnLoadSample');
     const btnClear = document.getElementById('btnClear');
@@ -801,24 +790,19 @@
       return list;
     }
 
-    function categorizeItem(numStr) {
+    function categorizeItem(numStr, cutoff = 100) {
       const clean = String(numStr).trim();
       const digits = clean.replace(/\D/g, '').length;
       const val = Number(clean);
       const isNum = !isNaN(val);
 
-      const is1to100 = isNum && val >= 1 && val <= 100;
-      const isAbove100 = (isNum && val > 100) || digits >= 3;
-      const is3Digit = digits === 3 && (val > 100 || !isNum);
-      const is4Digit = digits === 4;
+      const is1to100 = isNum && val >= 1 && val <= cutoff;
+      const is101to9999 = (isNum && val > cutoff && val <= 9999) || (!is1to100 && digits >= 3);
 
-      let label = '1 – 100';
-      let tagClass = 'tag-blue';
-      if (is4Digit) { label = '4-Digit'; tagClass = 'tag-purple'; }
-      else if (is3Digit) { label = '3-Digit'; tagClass = 'tag-amber'; }
-      else if (isAbove100) { label = 'Above 100'; tagClass = 'tag-emerald'; }
+      const label = is1to100 ? (cutoff === 101 ? '1 – 101' : '1 – 100') : '101 – 9999';
+      const tagClass = is1to100 ? 'tag-blue' : 'tag-purple';
 
-      return { is1to100, isAbove100, is3Digit, is4Digit, label, tagClass };
+      return { is1to100, is101to9999, label, tagClass };
     }
 
     function process() {
@@ -827,6 +811,7 @@
       const pairDelim = optPairDelim.value || '#';
       const kvDelim = optKvDelim.value || '=';
       const order = optOrder.value;
+      const cutoff = Number(optCutoff.value) || 100;
 
       let sorted = [...pairs];
       if (order === 'reverse') {
@@ -838,16 +823,12 @@
       }
 
       const list1to100 = [];
-      const listAbove100 = [];
-      const list3Digit = [];
-      const list4Digit = [];
+      const list101to9999 = [];
 
       sorted.forEach(p => {
-        const cat = categorizeItem(p.number);
+        const cat = categorizeItem(p.number, cutoff);
         if (cat.is1to100) list1to100.push(p);
-        if (cat.isAbove100) listAbove100.push(p);
-        if (cat.is3Digit) list3Digit.push(p);
-        if (cat.is4Digit) list4Digit.push(p);
+        else list101to9999.push(p);
       });
 
       const calcSum = (arr) => arr.reduce((s, x) => s + (isNaN(x.amount) ? 0 : x.amount), 0);
@@ -856,10 +837,19 @@
       cachedCategories = {
         all: { items: sorted, count: sorted.length, sum: calcSum(sorted), formatted: toFormat(sorted) },
         '1-100': { items: list1to100, count: list1to100.length, sum: calcSum(list1to100), formatted: toFormat(list1to100) },
-        '3-digit': { items: list3Digit, count: list3Digit.length, sum: calcSum(list3Digit), formatted: toFormat(list3Digit) },
-        '4-digit': { items: list4Digit, count: list4Digit.length, sum: calcSum(list4Digit), formatted: toFormat(list4Digit) },
-        'above-100': { items: listAbove100, count: listAbove100.length, sum: calcSum(listAbove100), formatted: toFormat(listAbove100) },
+        '101-9999': { items: list101to9999, count: list101to9999.length, sum: calcSum(list101to9999), formatted: toFormat(list101to9999) }
       };
+
+      const lbl1 = cutoff === 101 ? '1 – 101' : '1 – 100';
+      const lbl2 = cutoff === 101 ? '102 – 9999' : '101 – 9999';
+
+      // Update labels
+      document.getElementById('title1to100').textContent = '# ' + lbl1 + ' Numbers';
+      document.getElementById('title101to9999').textContent = '📦 ' + lbl2 + ' Numbers';
+      document.getElementById('tabLabel1to100').innerHTML = lbl1 + ' (<span id="tabCount1to100">' + cachedCategories['1-100'].count + '</span>)';
+      document.getElementById('tabLabel101to9999').innerHTML = lbl2 + ' (<span id="tabCount101to9999">' + cachedCategories['101-9999'].count + '</span>)';
+      document.getElementById('boxTitle1to100').innerHTML = lbl1 + ' Numbers (<span id="splitCount1to100">' + cachedCategories['1-100'].count + '</span> items | ₹ ' + cachedCategories['1-100'].sum.toLocaleString() + ')';
+      document.getElementById('boxTitle101to9999').innerHTML = lbl2 + ' Numbers (<span id="splitCount101to9999">' + cachedCategories['101-9999'].count + '</span> items | ₹ ' + cachedCategories['101-9999'].sum.toLocaleString() + ')';
 
       // Update global stats
       const totalCount = sorted.length;
@@ -869,35 +859,21 @@
       statUnique.textContent = new Set(sorted.map(p => p.number)).size;
       statAverage.textContent = totalCount > 0 ? '₹ ' + (totalAmount / totalCount).toFixed(1) : '₹ 0';
 
-      // Update category cards
+      // Update spotlight cards
       document.getElementById('badge1to100').textContent = cachedCategories['1-100'].count + ' items';
       document.getElementById('sum1to100').textContent = '₹ ' + cachedCategories['1-100'].sum.toLocaleString();
+      document.getElementById('btnCount1to100').textContent = cachedCategories['1-100'].count;
 
-      document.getElementById('badge3Digit').textContent = cachedCategories['3-digit'].count + ' items';
-      document.getElementById('sum3Digit').textContent = '₹ ' + cachedCategories['3-digit'].sum.toLocaleString();
-
-      document.getElementById('badge4Digit').textContent = cachedCategories['4-digit'].count + ' items';
-      document.getElementById('sum4Digit').textContent = '₹ ' + cachedCategories['4-digit'].sum.toLocaleString();
-
-      document.getElementById('badgeAbove100').textContent = cachedCategories['above-100'].count + ' items';
-      document.getElementById('sumAbove100').textContent = '₹ ' + cachedCategories['above-100'].sum.toLocaleString();
+      document.getElementById('badge101to9999').textContent = cachedCategories['101-9999'].count + ' items';
+      document.getElementById('sum101to9999').textContent = '₹ ' + cachedCategories['101-9999'].sum.toLocaleString();
+      document.getElementById('btnCount101to9999').textContent = cachedCategories['101-9999'].count;
 
       // Update tab counts
       document.getElementById('tabCountAll').textContent = totalCount;
-      document.getElementById('tabCount1to100').textContent = cachedCategories['1-100'].count;
-      document.getElementById('tabCount3Digit').textContent = cachedCategories['3-digit'].count;
-      document.getElementById('tabCount4Digit').textContent = cachedCategories['4-digit'].count;
-      document.getElementById('tabCountAbove100').textContent = cachedCategories['above-100'].count;
 
-      // Update split containers
-      document.getElementById('splitCount1to100').textContent = cachedCategories['1-100'].count;
-      document.getElementById('splitText1to100').value = cachedCategories['1-100'].formatted || 'None';
-      document.getElementById('splitCount3Digit').textContent = cachedCategories['3-digit'].count;
-      document.getElementById('splitText3Digit').value = cachedCategories['3-digit'].formatted || 'None';
-      document.getElementById('splitCount4Digit').textContent = cachedCategories['4-digit'].count;
-      document.getElementById('splitText4Digit').value = cachedCategories['4-digit'].formatted || 'None';
-      document.getElementById('splitCountAbove100').textContent = cachedCategories['above-100'].count;
-      document.getElementById('splitTextAbove100').value = cachedCategories['above-100'].formatted || 'None';
+      // Update separate split textareas
+      document.getElementById('splitText1to100').value = cachedCategories['1-100'].formatted || ('No ' + lbl1 + ' numbers found.');
+      document.getElementById('splitText101to9999').value = cachedCategories['101-9999'].formatted || ('No ' + lbl2 + ' numbers found.');
 
       renderOutputTab();
       renderTable();
@@ -928,13 +904,14 @@
         tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">No items found in this category.</td></tr>';
       } else {
         const kvDelim = optKvDelim.value || '=';
+        const cutoff = Number(optCutoff.value) || 100;
         tableBody.innerHTML = itemsToRender.map((p, idx) => {
-          const cat = categorizeItem(p.number);
+          const cat = categorizeItem(p.number, cutoff);
           return `
             <tr>
               <td style="color: var(--text-muted);">${idx + 1}</td>
-              <td><strong>${p.number}</strong></td>
-              <td><span class="cat-badge ${cat.tagClass}">${cat.label}</span></td>
+              <td><strong style="font-size: 0.95rem;">${p.number}</strong></td>
+              <td><span class="spotlight-badge ${cat.tagClass}">${cat.label}</span></td>
               <td><span style="color: #34d399; font-weight: bold;">₹ ${p.amount}</span></td>
               <td><span class="format-tag">${p.number}${kvDelim}${p.amount}</span></td>
             </tr>
@@ -945,16 +922,14 @@
 
     function setTableFilter(cat) {
       currentTableFilter = cat;
-      ['All', '1to100', '3Digit', '4Digit', 'Above100'].forEach(k => {
+      ['All', '1to100', '101to9999'].forEach(k => {
         const el = document.getElementById('btnFilter' + k);
         if (el) el.classList.remove('active');
       });
       const activeBtnMap = {
         'all': 'btnFilterAll',
         '1-100': 'btnFilter1to100',
-        '3-digit': 'btnFilter3Digit',
-        '4-digit': 'btnFilter4Digit',
-        'above-100': 'btnFilterAbove100'
+        '101-9999': 'btnFilter101to9999'
       };
       const activeEl = document.getElementById(activeBtnMap[cat]);
       if (activeEl) activeEl.classList.add('active');
@@ -987,14 +962,12 @@
 
     // Quick card listeners
     document.getElementById('btnCopy1to100').addEventListener('click', (e) => { e.stopPropagation(); copyCategory('1-100'); });
-    document.getElementById('btnCopy3Digit').addEventListener('click', (e) => { e.stopPropagation(); copyCategory('3-digit'); });
-    document.getElementById('btnCopy4Digit').addEventListener('click', (e) => { e.stopPropagation(); copyCategory('4-digit'); });
-    document.getElementById('btnCopyAbove100').addEventListener('click', (e) => { e.stopPropagation(); copyCategory('above-100'); });
+    document.getElementById('btnCopy101to9999').addEventListener('click', (e) => { e.stopPropagation(); copyCategory('101-9999'); });
+    document.getElementById('btnTopCopy1to100').addEventListener('click', () => copyCategory('1-100'));
+    document.getElementById('btnTopCopy101to9999').addEventListener('click', () => copyCategory('101-9999'));
 
-    document.getElementById('cardCat1to100').addEventListener('click', () => switchOutputTab('1-100'));
-    document.getElementById('cardCat3Digit').addEventListener('click', () => switchOutputTab('3-digit'));
-    document.getElementById('cardCat4Digit').addEventListener('click', () => switchOutputTab('4-digit'));
-    document.getElementById('cardCatAbove100').addEventListener('click', () => switchOutputTab('above-100'));
+    document.getElementById('spotlight1to100').addEventListener('click', () => switchOutputTab('1-100'));
+    document.getElementById('spotlight101to9999').addEventListener('click', () => switchOutputTab('101-9999'));
 
     function switchOutputTab(tab) {
       activeTab = tab;
@@ -1006,13 +979,23 @@
     }
 
     btnCopyOutput.addEventListener('click', () => {
-      const text = outputResult.value;
+      let text = '';
+      if (activeTab === 'split') {
+        text = (cachedCategories['1-100']?.formatted || '') + '\n\n' + (cachedCategories['101-9999']?.formatted || '');
+      } else {
+        text = cachedCategories[activeTab]?.formatted || '';
+      }
       if (!text) { showToast('Nothing to copy!'); return; }
       navigator.clipboard.writeText(text).then(() => showToast('✅ Copied to clipboard!'));
     });
 
     btnDownload.addEventListener('click', () => {
-      const text = outputResult.value;
+      let text = '';
+      if (activeTab === 'split') {
+        text = (cachedCategories['1-100']?.formatted || '') + '\n\n' + (cachedCategories['101-9999']?.formatted || '');
+      } else {
+        text = cachedCategories[activeTab]?.formatted || '';
+      }
       if (!text) { showToast('Nothing to download!'); return; }
       const blob = new Blob([text], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
@@ -1026,7 +1009,7 @@
     btnLoadSample.addEventListener('click', () => {
       inputJson.value = sampleJson;
       process();
-      showToast('Loaded sample data with 1-100, 3-digit & 4-digit numbers!');
+      showToast('Loaded sample data with 999 separated!');
     });
 
     btnClear.addEventListener('click', () => {
@@ -1047,9 +1030,9 @@
 
     inputJson.addEventListener('input', process);
     optOrder.addEventListener('change', process);
+    optCutoff.addEventListener('change', process);
     optPairDelim.addEventListener('input', process);
     optKvDelim.addEventListener('input', process);
-    btnConvert.addEventListener('click', process);
 
     tableToggle.addEventListener('click', () => {
       if (tableContent.style.display === 'none') {
